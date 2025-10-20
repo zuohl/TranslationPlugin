@@ -30,8 +30,6 @@ object DeeplxTranslator : AbstractTranslator(), DocumentationTranslator {
 
     override val intervalLimit: Int = TranslationEngine.DEEPLX.intervalLimit
 
-    override val contentLengthLimit: Int = TranslationEngine.DEEPLX.contentLengthLimit
-
     override val primaryLanguage: Lang
         get() = DEEPL.primaryLanguage
 
