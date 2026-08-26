@@ -2,6 +2,28 @@
 
 ## [Unreleased]
 
+## [3.9.0] (2026/08/23)
+
+- Added support for preserving the original text during document translation with Google Translate and Microsoft Translator.
+- Added advanced configuration support for the OpenAI Translator engine. (Experimental)
+- Added a quick access entry to the current translation engine's configuration in the translation engine list popup.
+- Fixed the issue where Microsoft Translator failed.
+- Fixed the issue where Google Translate document translation failed.
+- 谷歌翻译和微软翻译新增文档翻译时保留原文的支持
+- OpenAI 翻译引擎新增高级配置支持（实验性）
+- 在翻译引擎列表弹窗中添加当前翻译引擎配置的快速入口
+- 修复了微软翻译失败的问题
+- 修复了谷歌翻译文档翻译失败的问题
+
+## [3.8.4] (2026/07/25)
+
+- Compatible with 2026.2.
+- User interaction experience optimization and improvement.
+- Bug fixes.
+- 兼容 2026.2 版本
+- 用户交互体验优化与改进
+- Bug 修复
+
 ## [3.8.3] (2026/02/25)
 
 - User interaction experience optimization and improvement.
@@ -606,7 +628,9 @@
 - 支持单词拆分。翻译变量名或方法名时更方便
 - Bug修复
 
-[Unreleased]: https://github.com/YiiGuxing/TranslationPlugin/compare/v3.8.3...HEAD
+[Unreleased]: https://github.com/YiiGuxing/TranslationPlugin/compare/v3.9.0...HEAD
+[3.9.0]: https://github.com/YiiGuxing/TranslationPlugin/compare/v3.8.4...v3.9.0
+[3.8.4]: https://github.com/YiiGuxing/TranslationPlugin/compare/v3.8.3...v3.8.4
 [3.8.3]: https://github.com/YiiGuxing/TranslationPlugin/compare/v3.8.2...v3.8.3
 [3.8.2]: https://github.com/YiiGuxing/TranslationPlugin/compare/v3.8.1...v3.8.2
 [3.8.1]: https://github.com/YiiGuxing/TranslationPlugin/compare/v3.8.0...v3.8.1

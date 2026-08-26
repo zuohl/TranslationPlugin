@@ -17,6 +17,7 @@ import cn.yiiguxing.plugin.translate.trans.deeplx.DeeplxTranslator
 import cn.yiiguxing.plugin.translate.trans.google.GoogleSettingsDialog
 import cn.yiiguxing.plugin.translate.trans.google.GoogleTranslator
 import cn.yiiguxing.plugin.translate.trans.microsoft.MicrosoftTranslator
+import cn.yiiguxing.plugin.translate.trans.microsoft.MicrosoftTranslatorSettingsDialog
 import cn.yiiguxing.plugin.translate.trans.openai.ConfigType
 import cn.yiiguxing.plugin.translate.trans.openai.OpenAiCredentials
 import cn.yiiguxing.plugin.translate.trans.openai.OpenAiSettings
@@ -81,10 +82,7 @@ enum class TranslationEngine(
         }
 
     val hasConfiguration: Boolean
-        get() = when (this) {
-            MICROSOFT -> false
-            else -> true
-        }
+        get() = true
 
     fun supportedSourceLanguages(): List<Lang> = translator.supportedSourceLanguages
     fun supportedTargetLanguages(): List<Lang> = translator.supportedTargetLanguages
@@ -108,6 +106,8 @@ enum class TranslationEngine(
 
     fun showConfigurationDialog(): Boolean {
         return when (this) {
+            MICROSOFT -> MicrosoftTranslatorSettingsDialog().showAndGet()
+
             YOUDAO -> YoudaoSettingsDialog().showAndGet()
 
             BAIDU -> AppKeySettingsDialog(
@@ -134,8 +134,6 @@ enum class TranslationEngine(
             DEEPL -> DeeplSettingsDialog().showAndGet()
             DEEPLX -> DeeplxSettingsDialog().showAndGet()
             OPEN_AI -> OpenAISettingsDialog(ConfigType.TRANSLATOR).showAndGet()
-
-            else -> true
         }
     }
 
