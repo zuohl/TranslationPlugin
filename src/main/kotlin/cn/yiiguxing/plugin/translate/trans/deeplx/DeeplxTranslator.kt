@@ -4,6 +4,8 @@ package cn.yiiguxing.plugin.translate.trans.deeplx
 
 import cn.yiiguxing.plugin.translate.message
 import cn.yiiguxing.plugin.translate.trans.*
+import cn.yiiguxing.plugin.translate.trans.documentation.DocumentationTranslator
+import cn.yiiguxing.plugin.translate.trans.documentation.translateBody
 import cn.yiiguxing.plugin.translate.ui.settings.TranslationEngine
 import cn.yiiguxing.plugin.translate.ui.settings.TranslationEngine.DEEPL
 import cn.yiiguxing.plugin.translate.util.i
@@ -42,7 +44,7 @@ object DeeplxTranslator : AbstractTranslator(), DocumentationTranslator {
 
     override fun checkConfiguration(force: Boolean): Boolean {
         if (force) {
-            return DEEPL.showConfigurationDialog()
+            return TranslationEngine.DEEPLX.showConfigurationDialog()
         }
 
         return true
@@ -109,7 +111,7 @@ object DeeplxTranslator : AbstractTranslator(), DocumentationTranslator {
                         message("action.check.configuration"),
                         icon = AllIcons.General.Settings
                     ) {
-                        DEEPL.showConfigurationDialog()
+                        TranslationEngine.DEEPLX.showConfigurationDialog()
                     }
                     return ErrorInfo(message, action)
                 }

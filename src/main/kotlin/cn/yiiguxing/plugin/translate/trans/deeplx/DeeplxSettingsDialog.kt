@@ -2,7 +2,6 @@ package cn.yiiguxing.plugin.translate.trans.deeplx
 
 import cn.yiiguxing.plugin.translate.HelpTopic
 import cn.yiiguxing.plugin.translate.message
-import cn.yiiguxing.plugin.translate.trans.google.DEFAULT_GOOGLE_API_SERVER_URL
 import cn.yiiguxing.plugin.translate.ui.LogoHeaderPanel
 import cn.yiiguxing.plugin.translate.ui.UI
 import com.intellij.openapi.components.service
@@ -26,7 +25,7 @@ class DeeplxSettingsDialog : DialogWrapper(false) {
     private val settings = service<DeeplxSettings>()
 
     private val apiEndpointField = JBTextField().apply {
-        emptyText.text = DEFAULT_GOOGLE_API_SERVER_URL
+        emptyText.text = "http://127.0.0.1:1188/translate"
     }
 
     private var apiEndpoint: String?
