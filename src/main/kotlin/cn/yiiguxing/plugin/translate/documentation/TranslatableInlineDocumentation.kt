@@ -1,9 +1,11 @@
 package cn.yiiguxing.plugin.translate.documentation
 
+import cn.yiiguxing.plugin.translate.trans.TranslationCacheType
+import cn.yiiguxing.plugin.translate.trans.Translator
 import cn.yiiguxing.plugin.translate.util.findElementOfTypeAt
 import com.intellij.openapi.util.Key
 import com.intellij.platform.backend.documentation.InlineDocumentation
-import com.intellij.psi.PsiDocCommentBase
+import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiFile
 import org.jetbrains.annotations.Nls
 
@@ -14,7 +16,7 @@ private val TRANSLATION_INFO_KEY = Key.create<InlineDocTranslationInfo>("transla
  * Sets the inline documentation translation [info] for the given PSI [comment].
  */
 internal fun setPsiInlineDocumentationTranslationInfo(
-    comment: PsiDocCommentBase,
+    comment: PsiComment,
     info: InlineDocTranslationInfo?
 ) {
     comment.putUserData(TRANSLATION_INFO_KEY, info)
@@ -23,17 +25,26 @@ internal fun setPsiInlineDocumentationTranslationInfo(
 /**
  * Returns the inline documentation translation info for the given PSI [comment].
  */
-internal fun getPsiInlineDocumentationTranslationInfo(comment: PsiDocCommentBase): InlineDocTranslationInfo? {
+internal fun getPsiInlineDocumentationTranslationInfo(comment: PsiComment): InlineDocTranslationInfo? {
     return comment.getUserData(TRANSLATION_INFO_KEY)
 }
 
 internal data class InlineDocTranslationInfo(
     val translatedText: String? = null,
     val translatorId: String? = null,
+    val translationCacheToken: String? = null,
     val isLoading: Boolean = false,
     val isDisabled: Boolean = false,
     val hasError: Boolean = false,
 ) {
+
+    /**
+     * Checks whether this cached info can be reused with the given [translator].
+     */
+    fun isCacheUsable(translator: Translator): Boolean {
+        return translatorId == translator.id
+                && translationCacheToken == translator.translationCacheToken(TranslationCacheType.DOCUMENTATION)
+    }
 
     fun disabled(disabled: Boolean): InlineDocTranslationInfo {
         check(!isLoading && !hasError && translatedText != null) {
@@ -48,11 +59,13 @@ internal data class InlineDocTranslationInfo(
         fun translated(
             translatedText: String,
             translatorId: String,
+            translationCacheToken: String?,
             hasError: Boolean = false
         ): InlineDocTranslationInfo {
             return InlineDocTranslationInfo(
                 translatedText = translatedText,
                 translatorId = translatorId,
+                translationCacheToken = translationCacheToken,
                 hasError = hasError
             )
         }
@@ -70,7 +83,7 @@ internal class TranslatableInlineDocumentation(
 
         @Suppress("OverrideOnly")
         val offset = documentationRange.startOffset
-        val comment = file.findElementOfTypeAt<PsiDocCommentBase>(offset) ?: return renderText
+        val comment = file.findElementOfTypeAt<PsiComment>(offset) ?: return renderText
 
         return getPsiInlineDocumentationTranslationInfo(comment)?.let { info ->
             info.translatedText?.takeIf { !info.isDisabled }
