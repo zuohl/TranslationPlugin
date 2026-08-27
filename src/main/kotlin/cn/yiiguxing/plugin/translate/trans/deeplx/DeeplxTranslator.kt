@@ -5,7 +5,8 @@ package cn.yiiguxing.plugin.translate.trans.deeplx
 import cn.yiiguxing.plugin.translate.message
 import cn.yiiguxing.plugin.translate.trans.*
 import cn.yiiguxing.plugin.translate.trans.documentation.DocumentationTranslator
-import cn.yiiguxing.plugin.translate.trans.documentation.translateBody
+import cn.yiiguxing.plugin.translate.trans.documentation.HtmlDocumentationTranslator
+import cn.yiiguxing.plugin.translate.trans.documentation.RawHtmlTranslationStrategy
 import cn.yiiguxing.plugin.translate.ui.settings.TranslationEngine
 import cn.yiiguxing.plugin.translate.ui.settings.TranslationEngine.DEEPL
 import cn.yiiguxing.plugin.translate.util.i
@@ -76,13 +77,25 @@ object DeeplxTranslator : AbstractTranslator(), DocumentationTranslator {
         }.toTranslation()
     }
 
+    override fun translationCacheToken(cacheType: TranslationCacheType): String? {
+        return when (cacheType) {
+            TranslationCacheType.TEXT -> settings.apiEndpoint
+            TranslationCacheType.DOCUMENTATION -> "${settings.apiEndpoint};${settings.keepOriginalDocumentation}"
+        }
+    }
+
     override fun translateDocumentation(
         documentation: Document,
         srcLang: Lang,
         targetLang: Lang
     ): Document = checkError {
-        documentation.translateBody { bodyHTML ->
-            translateDocumentation(bodyHTML, srcLang, targetLang)
+        documentation.also { document ->
+            HtmlDocumentationTranslator(RawHtmlTranslationStrategy) { texts ->
+                texts.map { text ->
+                    if (text.isBlank()) ""
+                    else translateDocumentation(text, srcLang, targetLang)
+                }
+            }.translateDocument(document, settings.keepOriginalDocumentation)
         }
     }
 
