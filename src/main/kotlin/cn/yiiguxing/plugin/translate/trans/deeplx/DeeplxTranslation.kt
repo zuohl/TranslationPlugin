@@ -1,8 +1,12 @@
 package cn.yiiguxing.plugin.translate.trans.deeplx
 
+import cn.yiiguxing.plugin.translate.message
 import cn.yiiguxing.plugin.translate.trans.Lang
 import cn.yiiguxing.plugin.translate.trans.Translation
 import cn.yiiguxing.plugin.translate.trans.TranslationAdapter
+import cn.yiiguxing.plugin.translate.trans.text.DictionaryDocument
+import cn.yiiguxing.plugin.translate.trans.text.DictionaryEntry
+import cn.yiiguxing.plugin.translate.trans.text.DictionaryGroup
 import com.google.gson.annotations.SerializedName
 
 data class DeeplxTranslations (
@@ -24,7 +28,26 @@ data class DeeplxTranslations (
         if (srcLang == null) {
             srcLang = Lang.ENGLISH_AMERICAN
         }
-        return Translation(original!!, data, srcLang, targetLang, listOf(srcLang))
+
+        val dictDocument = alternatives.takeIf { it.isNotEmpty() }?.let { alts ->
+            DictionaryDocument(
+                listOf(
+                    DictionaryGroup(
+                        message("deeplx.alternatives"),
+                        alts.map { DictionaryEntry(it) }
+                    )
+                )
+            )
+        }
+
+        return Translation(
+            original = original!!,
+            translation = data,
+            srcLang = srcLang,
+            targetLang = targetLang,
+            sourceLangs = listOf(srcLang),
+            dictDocument = dictDocument
+        )
     }
 }
 

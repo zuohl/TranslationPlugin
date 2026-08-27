@@ -7,6 +7,7 @@ import cn.yiiguxing.plugin.translate.ui.UI
 import com.intellij.openapi.components.service
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.ui.JBColor
+import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBTextField
 import com.intellij.util.ui.UIUtil
 import icons.TranslationIcons
@@ -27,6 +28,11 @@ class DeeplxSettingsDialog : DialogWrapper(false) {
     private val apiEndpointField = JBTextField().apply {
         emptyText.text = "http://127.0.0.1:1188/translate"
     }
+
+    private val keepOriginalCheckBox = JBCheckBox(
+        message("settings.documentation.translation.keep.original"),
+        settings.keepOriginalDocumentation
+    )
 
     private var apiEndpoint: String?
         get() = apiEndpointField.text?.takeIf { it.isNotBlank() }
@@ -53,6 +59,15 @@ class DeeplxSettingsDialog : DialogWrapper(false) {
         return JPanel(UI.migLayout(UI.migSize(8))).apply {
             add(JLabel(message("deeplx.settings.dialog.label.api.endpoint")))
             add(apiEndpointField, UI.fillX().width(UI.migSize(authKeyFieldWidth)).wrap())
+            add(
+                UI.createHint(message("deeplx.settings.dialog.hint"), authKeyFieldWidth, apiEndpointField),
+                UI.cc().cell(1, 1).wrap()
+            )
+            add(keepOriginalCheckBox, UI.cc().cell(1, 2).wrap())
+            add(
+                UI.createHint(message("settings.documentation.translation.keep.original.description"), authKeyFieldWidth, keepOriginalCheckBox),
+                UI.cc().cell(1, 3).wrap()
+            )
         }
     }
 
@@ -63,6 +78,7 @@ class DeeplxSettingsDialog : DialogWrapper(false) {
 
     override fun doOKAction() {
         settings.apiEndpoint = apiEndpoint
+        settings.keepOriginalDocumentation = keepOriginalCheckBox.isSelected
         super.doOKAction()
     }
 }

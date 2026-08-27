@@ -17,6 +17,12 @@ class DeeplxSettings : BaseState(), PersistentStateComponent<DeeplxSettings> {
     @get:OptionTag("API_ENDPOINT")
     var apiEndpoint: String? by string()
 
+    /**
+     * Whether to keep the original text after documentation translation.
+     */
+    @get:OptionTag("KEEP_ORIGINAL_DOCUMENTATION")
+    var keepOriginalDocumentation: Boolean by property(false)
+
     override fun getState(): DeeplxSettings = this
 
     override fun loadState(state: DeeplxSettings) {
