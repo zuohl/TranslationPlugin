@@ -1,0 +1,148 @@
+name: Sync Upstream Release
+
+on:
+  schedule:
+    # 每 30 分钟检查一次上游是否有新 Release
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: '是否强制重新构建发布（即使本地已存在该 Release）'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  check-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Check Upstream Release
+        id: check_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FORCE_BUILD: ${{ github.event.inputs.force }}
+        run: |
+          echo "获取上游 YiiGuxing/TranslationPlugin 最新 Release 信息..."
+          LATEST_JSON=$(gh api repos/YiiGuxing/TranslationPlugin/releases/latest)
+          
+          TAG=$(echo "$LATEST_JSON" | jq -r '.tag_name')
+          TITLE=$(echo "$LATEST_JSON" | jq -r '.name // .tag_name')
+          
+          echo "上游最新 Release Tag: $TAG"
+          echo "上游最新 Release 标题: $TITLE"
+          
+          # 将 release 信息保存到临时文件以保留多行格式
+          echo "$LATEST_JSON" | jq -r '.body // ""' > /tmp/upstream_body.txt
+
+          echo "upstream_tag=$TAG" >> $GITHUB_OUTPUT
+          echo "upstream_title=$TITLE" >> $GITHUB_OUTPUT
+
+          # 检查本地仓库是否已发布过此 Tag 的 Release
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            echo "本地仓库已存在 Release $TAG。"
+            if [ "$FORCE_BUILD" = "true" ]; then
+              echo "检测到 force=true，强制重新执行同步与发布。"
+              echo "need_release=true" >> $GITHUB_OUTPUT
+            else
+              echo "无需重复构建与发布，流程结束。"
+              echo "need_release=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "检测到上游有新版本 $TAG，准备同步与发布！"
+            echo "need_release=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Sync Upstream Code
+        if: steps.check_release.outputs.need_release == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UPSTREAM_TAG: ${{ steps.check_release.outputs.upstream_tag }}
+        run: |
+          echo "添加上游远程仓库并获取目标标签..."
+          git remote add upstream https://github.com/YiiGuxing/TranslationPlugin.git || true
+          git fetch upstream tag "$UPSTREAM_TAG" --force
+          git fetch upstream master
+
+          echo "尝试合并上游标签 $UPSTREAM_TAG 到当前分支..."
+          if git merge "$UPSTREAM_TAG" -m "chore: sync upstream release $UPSTREAM_TAG" --no-edit; then
+            echo "代码合并成功，推送至 origin master..."
+            git push origin master
+          else
+            echo "::error::合并上游改动发生冲突！请人工介入处理。"
+            git merge --abort
+            gh issue create \
+              --title "合并上游 Release $UPSTREAM_TAG 失败：发生代码冲突" \
+              --body "自动同步工作流在尝试合并上游 \`$UPSTREAM_TAG\` 时检测到代码冲突，已自动中止合并，请手动拉取代码解决冲突。" \
+              || true
+            exit 1
+          fi
+
+      - name: Setup Java
+        if: steps.check_release.outputs.need_release == 'true'
+        uses: actions/setup-java@v5
+        with:
+          distribution: zulu
+          java-version: 17
+
+      - name: Setup Gradle
+        if: steps.check_release.outputs.need_release == 'true'
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-home-cache-cleanup: true
+
+      - name: Build Plugin
+        if: steps.check_release.outputs.need_release == 'true'
+        run: |
+          chmod +x ./gradlew
+          ./gradlew buildPlugin
+
+      - name: Publish Release
+        if: steps.check_release.outputs.need_release == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UPSTREAM_TAG: ${{ steps.check_release.outputs.upstream_tag }}
+          UPSTREAM_TITLE: ${{ steps.check_release.outputs.upstream_title }}
+        run: |
+          DIST_ZIP=$(ls ./build/distributions/*.zip | head -n 1)
+          if [ -z "$DIST_ZIP" ]; then
+            echo "::error::未找到编译生成的插件 zip 包！"
+            exit 1
+          fi
+          echo "找到产物: $DIST_ZIP"
+
+          # 组合 Release Notes
+          BODY_CONTENT=$(cat /tmp/upstream_body.txt)
+          NOTE_FILE="/tmp/release_note.md"
+          cat << 'EOF' > "$NOTE_FILE"
+          > **提示**：此版本自动同步自上游官方 Release，已集成自定义修改（解除 DeepLX 内容长度限制等）。
+
+          ### 上游 Release 说明：
+          EOF
+          echo "$BODY_CONTENT" >> "$NOTE_FILE"
+
+          if gh release view "$UPSTREAM_TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            echo "Release $UPSTREAM_TAG 已存在，更新产物附件与说明..."
+            gh release upload "$UPSTREAM_TAG" "$DIST_ZIP" --clobber
+            gh release edit "$UPSTREAM_TAG" --notes-file "$NOTE_FILE"
+          else
+            echo "创建新 Release: $UPSTREAM_TAG..."
+            gh release create "$UPSTREAM_TAG" "$DIST_ZIP" \
+              --title "$UPSTREAM_TITLE" \
+              --notes-file "$NOTE_FILE"
+          fi
+          echo "发布完成！"
