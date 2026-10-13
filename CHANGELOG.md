@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+- Migrated EdgeTTS to the new API endpoint.
+- 迁移 EdgeTTS 至新 API 端点
+
+## [3.9.2] (2026/10/12)
+
+- Optimized Baidu Translate document translation to preserve the basic document formatting.
+- 优化了百度文档翻译，保留文档的基础格式
+
 ## [3.9.1] (2026/08/26)
 
 - Fixed the issue of cache conflicts in document translation for Google Translate.
@@ -635,7 +643,8 @@
 - 支持单词拆分。翻译变量名或方法名时更方便
 - Bug修复
 
-[Unreleased]: https://github.com/YiiGuxing/TranslationPlugin/compare/v3.9.1...HEAD
+[Unreleased]: https://github.com/YiiGuxing/TranslationPlugin/compare/v3.9.2...HEAD
+[3.9.2]: https://github.com/YiiGuxing/TranslationPlugin/compare/v3.9.1...v3.9.2
 [3.9.1]: https://github.com/YiiGuxing/TranslationPlugin/compare/v3.9.0...v3.9.1
 [3.9.0]: https://github.com/YiiGuxing/TranslationPlugin/compare/v3.8.4...v3.9.0
 [3.8.4]: https://github.com/YiiGuxing/TranslationPlugin/compare/v3.8.3...v3.8.4
