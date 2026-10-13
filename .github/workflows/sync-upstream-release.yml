@@ -137,11 +137,12 @@ jobs:
 
           if gh release view "$UPSTREAM_TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
             echo "Release $UPSTREAM_TAG 已存在，更新产物附件与说明..."
-            gh release upload "$UPSTREAM_TAG" "$DIST_ZIP" --clobber
-            gh release edit "$UPSTREAM_TAG" --notes-file "$NOTE_FILE"
+            gh release upload "$UPSTREAM_TAG" "$DIST_ZIP" --repo "$GITHUB_REPOSITORY" --clobber
+            gh release edit "$UPSTREAM_TAG" --repo "$GITHUB_REPOSITORY" --notes-file "$NOTE_FILE"
           else
             echo "创建新 Release: $UPSTREAM_TAG..."
             gh release create "$UPSTREAM_TAG" "$DIST_ZIP" \
+              --repo "$GITHUB_REPOSITORY" \
               --title "$UPSTREAM_TITLE" \
               --notes-file "$NOTE_FILE"
           fi
